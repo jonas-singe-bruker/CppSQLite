@@ -6,21 +6,25 @@
 
 #include <gtest/gtest.h>
 
-namespace
-{
-// Log handler is a function pointer, so we can't provide capturing lambdas in our tests
-// Instead provide this singleton. Don't forget to getRecords().clear() after usage!
-std::vector<std::string>& getRecords()
-{
-    static std::vector<std::string> records;
-    return records;
-}
+#if defined(_WIN32) || defined(WIN32)
+#define OS_Windows
+#endif
 
-void removeIfExists(const std::filesystem::path& path)
+    namespace
 {
-    std::error_code ec;
-    std::filesystem::remove(path, ec);
-}
+    // Log handler is a function pointer, so we can't provide capturing lambdas in our tests
+    // Instead provide this singleton. Don't forget to getRecords().clear() after usage!
+    std::vector<std::string>& getRecords()
+    {
+        static std::vector<std::string> records;
+        return records;
+    }
+
+    void removeIfExists(const std::filesystem::path& path)
+    {
+        std::error_code ec;
+        std::filesystem::remove(path, ec);
+    }
 
 } // namespace
 
@@ -60,20 +64,27 @@ TEST(ExecQueryTest, selectOneRow)
 TEST(DbTest, openNonExistentFileInReadOnly_ShouldThrow)
 {
     CppSQLite3DB db;
-   EXPECT_THROW_WITH_MSG(db.open("nowhere.sqlite", SQLITE_OPEN_READONLY), CppSQLite3Exception,
+    EXPECT_THROW_WITH_MSG(db.open("nowhere.sqlite", SQLITE_OPEN_READONLY), CppSQLite3Exception,
                           "SQLITE_CANTOPEN[14]: unable to open database file");
 }
 TEST(DbTest, openDir_ShouldThrow)
 {
-    //checks that the extended error code is appended to the message 
+    // checks that the extended error code is appended to the message
     CppSQLite3DB db;
-     auto tmp_dir = std::filesystem::temp_directory_path() / "openDir_ShouldThrow";
-    if (!std::filesystem::create_directory(tmp_dir)) {
+    auto tmp_dir = std::filesystem::temp_directory_path() / "openDir_ShouldThrow";
+    if (!std::filesystem::create_directory(tmp_dir))
+    {
         std::cout << "Test cannot run: Failed to create test directory" << std::endl;
         return;
     }
+    std::string expectedErrMsg;
+#ifdef OS_Windows
+    expectedErrMsg = "SQLITE_CANTOPEN[14]: unable to open database file (SQLITE_CANTOPEN_ISDIR)";
+#else
+    expectedErrMsg = "SQLITE_IOERR[10]: disk I/O error (SQLITE_IOERR_READ)";
+#endif
     EXPECT_THROW_WITH_MSG(db.open(tmp_dir.string().c_str(), SQLITE_OPEN_READONLY), CppSQLite3Exception,
-                          "SQLITE_CANTOPEN[14]: unable to open database file (SQLITE_CANTOPEN_ISDIR)");
+                          expectedErrMsg.c_str());
     std::filesystem::remove(tmp_dir);
 }
 TEST(DbTest, writingToReadOnlyDatabaseShouldFail)

@@ -24,13 +24,15 @@ void defaultErrorHandler(int nErrorCode, int extendedErrorCode, std::string_view
                          std::string_view /* context*/)
 {
     std::string msg;
-    if (extendedErrorCode != nErrorCode) {
-        msg = fmt::format("{:s}[{:d}]: {:s} ({:s})", CppSQLite3Exception::errorCodeAsString(nErrorCode),
-                                  nErrorCode, errorMessage, CppSQLite3Exception::errorCodeAsString(extendedErrorCode));
+    if (extendedErrorCode != nErrorCode)
+    {
+        msg = fmt::format("{:s}[{:d}]: {:s} ({:s})", CppSQLite3Exception::errorCodeAsString(nErrorCode), nErrorCode,
+                          errorMessage, CppSQLite3Exception::errorCodeAsString(extendedErrorCode));
     }
-    else {
-        msg = fmt::format("{:s}[{:d}]: {:s}", CppSQLite3Exception::errorCodeAsString(nErrorCode),
-            nErrorCode, errorMessage);
+    else
+    {
+        msg = fmt::format("{:s}[{:d}]: {:s}", CppSQLite3Exception::errorCodeAsString(nErrorCode), nErrorCode,
+                          errorMessage);
     }
     throw CppSQLite3Exception(nErrorCode, msg);
 }
@@ -163,14 +165,6 @@ std::string_view CppSQLite3Exception::errorCodeAsString(int nErrCode)
         return "SQLITE_DONE";
     case CPPSQLITE_ERROR:
         return "CPPSQLITE_ERROR";
-    default:
-        return extendedErrorCodeAsString(nErrCode);
-    }
-}
-std::string_view CppSQLite3Exception::extendedErrorCodeAsString(int nErrCode)
-{
-    switch (nErrCode)
-    {
     case SQLITE_ERROR_MISSING_COLLSEQ:
         return NAMEOF(SQLITE_ERROR_MISSING_COLLSEQ);
     case SQLITE_ERROR_RETRY:
@@ -329,6 +323,7 @@ std::string_view CppSQLite3Exception::extendedErrorCodeAsString(int nErrCode)
         return "UNKNOWN_ERROR";
     }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 CppSQLite3Query::CppSQLite3Query() : mConfig{}

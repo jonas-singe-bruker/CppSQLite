@@ -94,7 +94,6 @@ public:
 
     static std::string_view errorCodeAsString(int nErrCode);
 
-    static std::string_view extendedErrorCodeAsString(int nErrCode);
 private:
     int mnErrCode;
 };
