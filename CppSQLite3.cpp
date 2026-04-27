@@ -734,7 +734,11 @@ int CppSQLite3Statement::execDML()
 
     const char* szError = 0;
 
-    mConfig.log(CppSQLite3LogLevel::verbose, sqlite3_expanded_sql(mpVM));
+    {
+        char* expandedSql = sqlite3_expanded_sql(mpVM);
+        mConfig.log(CppSQLite3LogLevel::verbose, expandedSql);
+        sqlite3_free(expandedSql);
+    }
 
     int nRet = sqlite3_step(mpVM);
 
@@ -767,7 +771,11 @@ CppSQLite3Query CppSQLite3Statement::execQuery()
     checkDB();
     checkVM();
 
-    mConfig.log(CppSQLite3LogLevel::verbose, sqlite3_expanded_sql(mpVM));
+    {
+        char* expandedSql = sqlite3_expanded_sql(mpVM);
+        mConfig.log(CppSQLite3LogLevel::verbose, expandedSql);
+        sqlite3_free(expandedSql);
+    }
 
     int nRet = sqlite3_step(mpVM);
 
