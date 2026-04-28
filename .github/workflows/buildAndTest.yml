@@ -100,10 +100,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cppsqlite3-${{matrix.artifact_build_type}}-${{matrix.artifact_os}}-${{github.run_id}}
+
+      - name: Rename zip to unique release asset name
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(CppSQLite3-*.zip)
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Expected exactly one zip, found: ${files[*]}"
+            exit 1
+          fi
+          mv "${files[0]}" "CppSQLite3-${{ matrix.artifact_build_type }}-${{ matrix.artifact_os }}.zip"
           
       - name: Deploy artifact
         uses: skx/github-action-publish-binaries@release-2.0
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          args: 'CppSQLite3-*.zip'
+          args: "CppSQLite3-${{ matrix.artifact_build_type }}-${{ matrix.artifact_os }}.zip"
