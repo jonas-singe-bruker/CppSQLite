@@ -100,9 +100,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cppsqlite3-${{matrix.artifact_build_type}}-${{matrix.artifact_os}}-${{github.run_id}}
+          path: artifact
 
       - name: Rename zip to unique release asset name
         shell: bash
+        working-directory: artifact
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -124,16 +126,10 @@ jobs:
             exit 1
           fi
 
-          BASE="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}.zip"
-          TARGET="$BASE"
-    
-          # Avoid filename collisions inside the job workspace
-          if [ -e "$TARGET" ]; then
-            TARGET="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}-run${GITHUB_RUN_ID}-attempt${GITHUB_RUN_ATTEMPT}.zip"
-          fi
+          TARGET="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}.zip"
           
           mv "${files[0]}" "$TARGET"
-          echo "ASSET_NAME=$TARGET" >> "$GITHUB_ENV"
+          echo "ASSET_NAME=artifact/$TARGET" >> "$GITHUB_ENV"
           
       - name: Deploy artifact
         uses: skx/github-action-publish-binaries@release-2.0
