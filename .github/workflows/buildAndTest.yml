@@ -126,9 +126,15 @@ jobs:
             exit 1
           fi
 
+          SRC="${files[0]}"
           TARGET="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}.zip"
           
-          mv "${files[0]}" "$TARGET"
+          if [ "$SRC" != "$TARGET" ]; then
+            mv "$SRC" "$TARGET"
+          else
+            echo "Zip already has target name ($TARGET); skipping rename."
+          fi
+          
           echo "ASSET_NAME=artifact/$TARGET" >> "$GITHUB_ENV"
           
       - name: Deploy artifact
