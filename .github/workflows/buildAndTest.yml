@@ -106,16 +106,38 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
+
+          # Current date of the runner (UTC). Change to +%Y%m%d in your desired timezone if needed.
+          DATE="$(date -u +%Y%m%d)"
+
+          # Map matrix OS to label
+          case "${{ matrix.artifact_os }}" in
+            windows-2022) OS_LABEL="Windows" ;;
+            ubuntu-22.04) OS_LABEL="Linux" ;;
+            *) OS_LABEL="${{ matrix.artifact_os }}" ;;
+          esac          
+
+          # Find the single zip we downloaded
           files=(CppSQLite3-*.zip)
           if [ "${#files[@]}" -ne 1 ]; then
             echo "Expected exactly one zip, found: ${files[*]}"
             exit 1
           fi
-          mv "${files[0]}" "CppSQLite3-${{ matrix.artifact_build_type }}-${{ matrix.artifact_os }}.zip"
+
+          BASE="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}.zip"
+          TARGET="$BASE"
+    
+          # Avoid filename collisions inside the job workspace
+          if [ -e "$TARGET" ]; then
+            TARGET="CppSQLite3-fork-${OS_LABEL}-${{ matrix.artifact_build_type }}-${DATE}-run${GITHUB_RUN_ID}-attempt${GITHUB_RUN_ATTEMPT}.zip"
+          fi
+          
+          mv "${files[0]}" "$TARGET"
+          echo "ASSET_NAME=$TARGET" >> "$GITHUB_ENV"
           
       - name: Deploy artifact
         uses: skx/github-action-publish-binaries@release-2.0
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          args: "CppSQLite3-${{ matrix.artifact_build_type }}-${{ matrix.artifact_os }}.zip"
+          args: "${{ env.ASSET_NAME }}"
